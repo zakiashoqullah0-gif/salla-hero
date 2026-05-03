@@ -4,37 +4,77 @@
   var TARGET = ".cinematic-hero";
   var MOUNTED_FLAG = "data-adh-mounted";
 
-  // === ASSET URLS ===
-  var ASSETS = {
-    printer: "https://cdn.jsdelivr.net/gh/zakiashoqullah0-gif/salla-hero@main/assets/printer.png",
-    logo: "https://cdn.jsdelivr.net/gh/zakiashoqullah0-gif/salla-hero@main/assets/logo.png"
-  };
+  var BASE = "https://cdn.jsdelivr.net/gh/zakiashoqullah0-gif/salla-hero@main/assets/";
 
-  // === ACT 1 COPY ===
-  var SCENE = {
-    eyebrow: "الطباعة الاحترافية",
-    headline: "اطبع أفكارك بدقة لا مثيل لها",
-    sub: "طابعات إبسون الأصلية بأحبار EcoTank، جودة استوديو في منزلك أو مشروعك.",
-    ctaText: "تسوق الطابعات",
-    ctaHref: "/categories"
-  };
+  var LOGO = BASE + "logo.png";
+
+  // === All 3 scenes defined here ===
+  var SCENES = [
+    {
+      productSrc: BASE + "printer.png",
+      productAlt: "Epson Printer",
+      eyebrow: "الطباعة الاحترافية",
+      headline: "اطبع أفكارك بدقة لا مثيل لها",
+      sub: "طابعات إبسون الأصلية بأحبار إيكوتانك، جودة استوديو في منزلك أو مشروعك.",
+      ctaText: "تسوق الطابعات",
+      ctaHref: "/categories"
+    },
+    {
+      productSrc: BASE + "heatpress.png",
+      productAlt: "Heat Press",
+      eyebrow: "النقل الحراري",
+      headline: "صمّم. اضغط. ارتدِ.",
+      sub: "مكابس حرارية احترافية لطباعة التيشيرتات والأكواب والإكسسوارات بنتائج تدوم.",
+      ctaText: "تسوق المكابس الحرارية",
+      ctaHref: "/categories"
+    },
+    {
+      productSrc: BASE + "cameo.png",
+      productAlt: "Silhouette Cameo",
+      eyebrow: "القص الذكي",
+      headline: "إبداعك يتشكّل بضغطة واحدة",
+      sub: "قاطعات سيلويت كاميو 5 لتنفيذ مشاريعك الإبداعية بدقة احترافية.",
+      ctaText: "تسوق قاطعات كاميو",
+      ctaHref: "/categories"
+    }
+  ];
+
+  function buildSceneHTML(scene, index) {
+    return (
+      '<div class="adh-scene" data-scene="' + (index + 1) + '">' +
+        '<div class="adh-glow"></div>' +
+        '<div class="adh-stage">' +
+          '<img class="adh-product" src="' + scene.productSrc + '" alt="' + scene.productAlt + '">' +
+        '</div>' +
+        '<div class="adh-floor-shadow"></div>' +
+        '<div class="adh-content">' +
+          '<p class="adh-eyebrow">' + scene.eyebrow + '</p>' +
+          '<h1 class="adh-headline">' + scene.headline + '</h1>' +
+          '<p class="adh-sub">' + scene.sub + '</p>' +
+          '<a class="adh-cta" href="' + scene.ctaHref + '">' + scene.ctaText + '</a>' +
+        '</div>' +
+      '</div>'
+    );
+  }
 
   function buildHTML() {
+    var bgs = '';
+    var scenes = '';
+    var dots = '';
+
+    for (var i = 0; i < SCENES.length; i++) {
+      bgs += '<div class="adh-bg" data-scene="' + (i + 1) + '"></div>';
+      scenes += buildSceneHTML(SCENES[i], i);
+      dots += '<div class="adh-progress-dot' + (i === 0 ? ' is-active' : '') + '"></div>';
+    }
+
     return (
       '<div class="adh-root">' +
         '<div class="adh-wrapper">' +
-          '<img class="adh-logo" src="' + ASSETS.logo + '" alt="ADOOSH">' +
-          '<div class="adh-glow"></div>' +
-          '<div class="adh-stage">' +
-            '<img class="adh-product" src="' + ASSETS.printer + '" alt="Epson Printer">' +
-          '</div>' +
-          '<div class="adh-floor-shadow"></div>' +
-          '<div class="adh-content">' +
-            '<p class="adh-eyebrow">' + SCENE.eyebrow + '</p>' +
-            '<h1 class="adh-headline">' + SCENE.headline + '</h1>' +
-            '<p class="adh-sub">' + SCENE.sub + '</p>' +
-            '<a class="adh-cta" href="' + SCENE.ctaHref + '">' + SCENE.ctaText + '</a>' +
-          '</div>' +
+          bgs +
+          '<img class="adh-logo" src="' + LOGO + '" alt="ADOOSH">' +
+          scenes +
+          '<div class="adh-progress">' + dots + '</div>' +
         '</div>' +
       '</div>'
     );
@@ -102,126 +142,159 @@
 
     var wrapper = root.querySelector('.adh-wrapper');
     var logo = root.querySelector('.adh-logo');
-    var glow = root.querySelector('.adh-glow');
-    var product = root.querySelector('.adh-product');
-    var floorShadow = root.querySelector('.adh-floor-shadow');
-    var eyebrow = root.querySelector('.adh-eyebrow');
-    var headline = root.querySelector('.adh-headline');
-    var sub = root.querySelector('.adh-sub');
-    var cta = root.querySelector('.adh-cta');
+    var progress = root.querySelector('.adh-progress');
+    var bgs = Array.prototype.slice.call(root.querySelectorAll('.adh-bg'));
+    var scenes = Array.prototype.slice.call(root.querySelectorAll('.adh-scene'));
+    var dots = Array.prototype.slice.call(root.querySelectorAll('.adh-progress-dot'));
 
-    console.log('[adh] init complete, wrapper:', wrapper.offsetWidth, 'x', wrapper.offsetHeight);
+    console.log('[adh] init complete, scenes:', scenes.length);
 
-    // === Initial state (everything hidden, product slightly below + scaled) ===
-    gsap.set(product, { y: 80, scale: 0.85, rotateY: -15, opacity: 0 });
-    gsap.set(glow, { scale: 0.6, opacity: 0 });
-    gsap.set(floorShadow, { scaleX: 0.5, opacity: 0 });
+    // Collect per-scene refs
+    var sceneRefs = scenes.map(function (sceneEl) {
+      return {
+        el: sceneEl,
+        glow: sceneEl.querySelector('.adh-glow'),
+        product: sceneEl.querySelector('.adh-product'),
+        floorShadow: sceneEl.querySelector('.adh-floor-shadow'),
+        eyebrow: sceneEl.querySelector('.adh-eyebrow'),
+        headline: sceneEl.querySelector('.adh-headline'),
+        sub: sceneEl.querySelector('.adh-sub'),
+        cta: sceneEl.querySelector('.adh-cta')
+      };
+    });
+
+    // === Initial state for all scenes ===
+    sceneRefs.forEach(function (s, i) {
+      gsap.set(s.product, { y: 80, scale: 0.85, rotateY: -15, opacity: 0 });
+      gsap.set(s.glow, { scale: 0.6, opacity: 0 });
+      gsap.set(s.floorShadow, { scaleX: 0.5, opacity: 0 });
+      gsap.set([s.eyebrow, s.headline, s.sub, s.cta], { y: 30, opacity: 0, filter: 'blur(8px)' });
+    });
     gsap.set(logo, { y: -20, opacity: 0 });
-    gsap.set([eyebrow, headline, sub, cta], { y: 30, opacity: 0, filter: 'blur(8px)' });
+    gsap.set(progress, { opacity: 0 });
 
-    // === Entry animation timeline ===
-    function playEntry() {
+    // Show scene 1 by default
+    gsap.set(scenes[0], { opacity: 1 });
+
+    var floatingTweens = [];
+
+    // === Per-scene entry choreography ===
+    function playSceneEntry(index) {
+      var s = sceneRefs[index];
       var tl = gsap.timeline();
 
-      tl.to(logo, {
-        y: 0, opacity: 1, duration: 0.8, ease: 'power2.out'
-      }, 0);
-
-      tl.to(glow, {
-        opacity: 1, scale: 1, duration: 1.6, ease: 'power2.out'
-      }, 0.1);
-
-      tl.to(floorShadow, {
-        opacity: 1, scaleX: 1, duration: 1.4, ease: 'power3.out'
-      }, 0.3);
-
-      tl.to(product, {
+      tl.to(s.glow, { opacity: 1, scale: 1, duration: 1.4, ease: 'power2.out' }, 0);
+      tl.to(s.floorShadow, { opacity: 1, scaleX: 1, duration: 1.2, ease: 'power3.out' }, 0.2);
+      tl.to(s.product, {
         y: 0, scale: 1, rotateY: 0, opacity: 1,
-        duration: 1.6, ease: 'power3.out'
-      }, 0.2);
-
-      tl.to(eyebrow, {
+        duration: 1.4, ease: 'power3.out'
+      }, 0.1);
+      tl.to(s.eyebrow, {
         y: 0, opacity: 1, filter: 'blur(0px)',
-        duration: 0.9, ease: 'power2.out'
-      }, 0.9);
-
-      tl.to(headline, {
-        y: 0, opacity: 1, filter: 'blur(0px)',
-        duration: 1, ease: 'power2.out'
-      }, 1.05);
-
-      tl.to(sub, {
-        y: 0, opacity: 1, filter: 'blur(0px)',
-        duration: 0.9, ease: 'power2.out'
-      }, 1.25);
-
-      tl.to(cta, {
-        y: 0, opacity: 1,
         duration: 0.8, ease: 'power2.out'
-      }, 1.45);
+      }, 0.7);
+      tl.to(s.headline, {
+        y: 0, opacity: 1, filter: 'blur(0px)',
+        duration: 0.9, ease: 'power2.out'
+      }, 0.85);
+      tl.to(s.sub, {
+        y: 0, opacity: 1, filter: 'blur(0px)',
+        duration: 0.8, ease: 'power2.out'
+      }, 1);
+      tl.to(s.cta, {
+        y: 0, opacity: 1,
+        duration: 0.7, ease: 'power2.out'
+      }, 1.15);
 
-      // Continuous floating motion on product (after entry)
+      // Continuous float
       tl.add(function () {
-        gsap.to(product, {
-          y: -12,
-          duration: 3,
-          ease: 'sine.inOut',
-          yoyo: true,
-          repeat: -1
+        var floatT = gsap.to(s.product, {
+          y: -12, duration: 3, ease: 'sine.inOut', yoyo: true, repeat: -1
         });
-        gsap.to(floorShadow, {
-          scaleX: 0.85,
-          opacity: 0.7,
-          duration: 3,
-          ease: 'sine.inOut',
-          yoyo: true,
-          repeat: -1
+        var shadowT = gsap.to(s.floorShadow, {
+          scaleX: 0.85, opacity: 0.7, duration: 3, ease: 'sine.inOut', yoyo: true, repeat: -1
         });
-      }, 1.6);
+        floatingTweens[index] = [floatT, shadowT];
+      }, 1.3);
     }
 
-    setTimeout(playEntry, 200);
+    // Logo + progress fade-in (always visible)
+    function playInitial() {
+      gsap.to(logo, { y: 0, opacity: 1, duration: 0.8, ease: 'power2.out', delay: 0.2 });
+      gsap.to(progress, { opacity: 1, duration: 0.8, ease: 'power2.out', delay: 0.4 });
+      playSceneEntry(0);
+    }
 
-    // === Scroll-driven scene exit (prep for Act 2) ===
-    // For now, the scene just pins for one viewport then releases
+    setTimeout(playInitial, 200);
+
+    // === Master scroll: 3 viewports total ===
+    var currentScene = 0;
+
     ScrollTrigger.create({
       trigger: wrapper,
       start: 'top top',
-      end: '+=100%',
+      end: '+=300%',
       pin: true,
       scrub: 0.6,
       anticipatePin: 1,
       onUpdate: function (self) {
-        var p = self.progress;
+        var p = self.progress; // 0 to 1
+        var localProgress = (p * SCENES.length) % 1; // progress within current scene 0..1
+        var sceneIndex = Math.min(Math.floor(p * SCENES.length), SCENES.length - 1);
 
-        // Product drifts up + fades + scales as user scrolls
-        gsap.set(product, {
-          y: -p * 100,
-          scale: 1 - p * 0.15,
-          opacity: 1 - p * 0.6
+        // Crossfade backgrounds
+        bgs.forEach(function (bg, i) {
+          var dist = Math.abs((p * (SCENES.length - 1)) - i);
+          var opacity = Math.max(0, 1 - dist);
+          gsap.set(bg, { opacity: opacity });
         });
 
-        // Glow expands + fades
-        gsap.set(glow, {
-          scale: 1 + p * 0.5,
-          opacity: 1 - p * 0.7
+        // Update active scene visibility (with crossfade)
+        scenes.forEach(function (sc, i) {
+          var dist = Math.abs((p * SCENES.length) - (i + 0.5));
+          var visibility = i === sceneIndex ? 1 : (dist < 0.7 ? 1 - dist : 0);
+          gsap.set(sc, { opacity: Math.max(0, Math.min(1, visibility)) });
         });
 
-        // Floor shadow shrinks + fades
-        gsap.set(floorShadow, {
-          scaleX: 1 - p * 0.4,
-          opacity: 0.7 * (1 - p)
+        // Update active dot
+        dots.forEach(function (dot, i) {
+          dot.classList.toggle('is-active', i === sceneIndex);
         });
 
-        // Text drifts down + fades
-        gsap.set([eyebrow, headline, sub, cta], {
-          y: p * 40,
-          opacity: 1 - p * 0.8
-        });
+        // Detect scene change → trigger entry animation for new scene
+        if (sceneIndex !== currentScene) {
+          currentScene = sceneIndex;
+
+          // Reset incoming scene to entry state
+          var s = sceneRefs[sceneIndex];
+          gsap.set(s.product, { y: 80, scale: 0.85, rotateY: -15, opacity: 0 });
+          gsap.set(s.glow, { scale: 0.6, opacity: 0 });
+          gsap.set(s.floorShadow, { scaleX: 0.5, opacity: 0 });
+          gsap.set([s.eyebrow, s.headline, s.sub, s.cta], { y: 30, opacity: 0, filter: 'blur(8px)' });
+
+          // Stop float on previous scene
+          if (floatingTweens[sceneIndex]) {
+            floatingTweens[sceneIndex].forEach(function (t) { t.kill(); });
+          }
+
+          playSceneEntry(sceneIndex);
+        }
+
+        // Within-scene scroll-driven exit on the OUTGOING scene
+        // (subtle drift as user scrolls past mid-point of scene)
+        if (sceneIndex < SCENES.length - 1) {
+          var nextSceneTransition = localProgress; // 0 = scene start, 1 = scene end
+          if (nextSceneTransition > 0.5) {
+            var exitProgress = (nextSceneTransition - 0.5) * 2; // 0..1
+            var s = sceneRefs[sceneIndex];
+            gsap.set(s.product, { y: -exitProgress * 60, scale: 1 - exitProgress * 0.1 });
+            gsap.set([s.eyebrow, s.headline, s.sub, s.cta], { y: exitProgress * 30 });
+          }
+        }
       }
     });
 
-    console.log('[adh] act 1 ready');
+    console.log('[adh] all 3 acts ready');
   }
 
   function scan() {
@@ -245,5 +318,5 @@
     }
   }).observe(document.body, { childList: true, subtree: true });
 
-  console.log('[adh] act-1 v1 loaded');
+  console.log('[adh] 3-act v1 loaded');
 })();
