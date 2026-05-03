@@ -1,4 +1,4 @@
-/* === ADOOSH Cinematic Hero — Act 1: Epson Printer === */
+/* === ADOOSH Cinematic Hero — 3 Acts === */
 
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap');
 
@@ -26,38 +26,85 @@
   width: 100%;
   height: 100vh;
   overflow: hidden;
-  background: linear-gradient(180deg, #faf7f2 0%, #f0ebe2 100%);
   font-family: 'Cairo', system-ui, sans-serif;
   direction: rtl;
 }
 
-/* Subtle radial glow behind product */
-.adh-glow {
+/* Three layered backgrounds, one per scene */
+.adh-bg {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 70vmin;
-  height: 70vmin;
-  background: radial-gradient(circle, rgba(255, 230, 180, 0.4) 0%, rgba(255, 230, 180, 0) 70%);
+  inset: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
   opacity: 0;
-  will-change: opacity, transform;
+  will-change: opacity;
 }
 
-/* Logo top-left (visually) — but RTL flips to top-right */
+.adh-bg[data-scene="1"] {
+  background: linear-gradient(180deg, #faf7f2 0%, #f0ebe2 100%);
+  opacity: 1;
+}
+
+.adh-bg[data-scene="2"] {
+  background: linear-gradient(180deg, #fdf4f4 0%, #f5e3e3 100%);
+}
+
+.adh-bg[data-scene="3"] {
+  background: linear-gradient(180deg, #f7f7f9 0%, #e8e8ee 100%);
+}
+
+/* Logo always visible top-right */
 .adh-logo {
   position: absolute;
   top: 2rem;
   right: 2rem;
   width: 64px;
   height: auto;
-  z-index: 20;
+  z-index: 30;
   opacity: 0;
   pointer-events: none;
 }
 
-/* Stage holds the product */
+/* Each scene is its own absolutely-positioned layer */
+.adh-scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+.adh-scene.is-active {
+  pointer-events: auto;
+}
+
+/* Per-scene radial glow */
+.adh-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80vmin;
+  height: 80vmin;
+  pointer-events: none;
+  will-change: opacity, transform;
+}
+
+.adh-scene[data-scene="1"] .adh-glow {
+  background: radial-gradient(circle, rgba(255, 230, 180, 0.45) 0%, rgba(255, 230, 180, 0) 70%);
+}
+
+.adh-scene[data-scene="2"] .adh-glow {
+  background: radial-gradient(circle, rgba(255, 200, 200, 0.5) 0%, rgba(255, 200, 200, 0) 70%);
+}
+
+.adh-scene[data-scene="3"] .adh-glow {
+  background: radial-gradient(circle, rgba(200, 210, 255, 0.45) 0%, rgba(200, 210, 255, 0) 70%);
+}
+
 .adh-stage {
   position: absolute;
   inset: 0;
@@ -69,32 +116,28 @@
 
 .adh-product {
   position: relative;
-  max-width: 50vmin;
-  max-height: 55vmin;
+  max-width: 60vmin;
+  max-height: 65vmin;
   width: auto;
   height: auto;
-  opacity: 0;
   will-change: transform, opacity;
   filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.18))
           drop-shadow(0 8px 12px rgba(0, 0, 0, 0.08));
 }
 
-/* Floor reflection / shadow ellipse beneath product */
 .adh-floor-shadow {
   position: absolute;
   bottom: 18%;
   left: 50%;
   transform: translateX(-50%);
-  width: 35vmin;
+  width: 40vmin;
   height: 4vmin;
-  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0) 70%);
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.28) 0%, rgba(0, 0, 0, 0) 70%);
   filter: blur(8px);
-  opacity: 0;
   will-change: opacity, transform;
   pointer-events: none;
 }
 
-/* Text content */
 .adh-content {
   position: absolute;
   inset: 0;
@@ -113,12 +156,14 @@
   font-size: clamp(0.7rem, 0.95vw, 0.95rem);
   font-weight: 600;
   letter-spacing: 0.4em;
-  color: #8a6a3a;
   margin: 0 0 1.25rem 0;
   text-transform: uppercase;
-  opacity: 0;
   will-change: opacity, transform, filter;
 }
+
+.adh-scene[data-scene="1"] .adh-eyebrow { color: #8a6a3a; }
+.adh-scene[data-scene="2"] .adh-eyebrow { color: #a04848; }
+.adh-scene[data-scene="3"] .adh-eyebrow { color: #4a5a8a; }
 
 .adh-headline {
   font-family: 'Cairo', sans-serif;
@@ -128,7 +173,6 @@
   color: #1a1a1a;
   margin: 0 0 1.5rem 0;
   max-width: 18ch;
-  opacity: 0;
   will-change: opacity, transform, filter;
 }
 
@@ -140,13 +184,12 @@
   color: #4a4a4a;
   margin: 0 0 2.5rem 0;
   max-width: 36rem;
-  opacity: 0;
   will-change: opacity, transform, filter;
 }
 
 .adh-cta {
   display: inline-block;
-  padding: 1rem 2.75rem;
+  padding: 1.1rem 3rem;
   font-family: 'Cairo', sans-serif;
   font-size: 1rem;
   font-weight: 600;
@@ -158,21 +201,66 @@
   border-radius: 999px;
   cursor: pointer;
   pointer-events: auto;
-  opacity: 0;
-  transition: background 0.3s ease, transform 0.3s ease;
-  will-change: opacity, transform;
+  box-shadow: 0 6px 16px rgba(26, 26, 26, 0.18),
+              0 2px 4px rgba(26, 26, 26, 0.12);
+  transition: background 0.35s ease,
+              transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.35s ease;
+  will-change: opacity, transform, box-shadow;
 }
 
-.adh-cta:hover {
+.adh-scene[data-scene="1"] .adh-cta:hover {
   background: #8a6a3a;
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(138, 106, 58, 0.32);
+}
+
+.adh-scene[data-scene="2"] .adh-cta:hover {
+  background: #a04848;
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(160, 72, 72, 0.32);
+}
+
+.adh-scene[data-scene="3"] .adh-cta:hover {
+  background: #4a5a8a;
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(74, 90, 138, 0.32);
+}
+
+.adh-cta:active {
+  transform: translateY(-1px);
+}
+
+/* Scene progress indicator (3 dots, bottom center) */
+.adh-progress {
+  position: absolute;
+  bottom: 2.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.6rem;
+  z-index: 25;
+  opacity: 0;
+}
+
+.adh-progress-dot {
+  width: 28px;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.15);
+  transition: background 0.5s ease, width 0.5s ease;
+}
+
+.adh-progress-dot.is-active {
+  background: rgba(0, 0, 0, 0.6);
+  width: 44px;
 }
 
 /* Mobile */
 @media (max-width: 768px) {
   .adh-product {
-    max-width: 70vmin;
-    max-height: 45vmin;
+    max-width: 75vmin;
+    max-height: 50vmin;
   }
   .adh-content {
     padding: 0 5vw 6vh 5vw;
@@ -181,6 +269,13 @@
     width: 48px;
     top: 1.25rem;
     right: 1.25rem;
+  }
+  .adh-cta {
+    padding: 1rem 2.5rem;
+    font-size: 0.95rem;
+  }
+  .adh-progress {
+    bottom: 1.5rem;
   }
 }
 
@@ -193,7 +288,8 @@
   .adh-cta,
   .adh-logo,
   .adh-glow,
-  .adh-floor-shadow {
+  .adh-floor-shadow,
+  .adh-scene {
     opacity: 1 !important;
     transform: none !important;
     filter: none !important;
