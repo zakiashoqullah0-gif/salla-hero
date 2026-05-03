@@ -1,28 +1,30 @@
-/* === ADOOSH Cinematic Hero — 3 Acts === */
+/* === ADOOSH Cinematic Hero — Sticky-based, no ScrollTrigger pin === */
 
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap');
 
-/* Reset Salla slider container */
+/* Salla container — let it grow naturally to 300vh */
 .cinematic-hero {
-  --sliderHeight: 100vh !important;
-  --mobileSliderHeight: 100vh !important;
+  --sliderHeight: auto !important;
+  --mobileSliderHeight: auto !important;
   position: relative !important;
   width: 100% !important;
   margin: 0 !important;
   padding: 0 !important;
-  height: 100vh !important;
-  overflow: hidden !important;
+  overflow: visible !important;
+  height: auto !important;
 }
 
+/* The TALL container — 300vh = 3 viewports of scroll */
 .adh-root {
   position: relative;
   width: 100%;
-  height: 100vh;
-  z-index: 1;
+  height: 300vh;
 }
 
+/* The STICKY viewport that stays in view while scrolling through .adh-root */
 .adh-wrapper {
-  position: relative;
+  position: sticky;
+  top: 0;
   width: 100%;
   height: 100vh;
   overflow: hidden;
@@ -30,7 +32,6 @@
   direction: rtl;
 }
 
-/* Three layered backgrounds, one per scene */
 .adh-bg {
   position: absolute;
   inset: 0;
@@ -54,7 +55,6 @@
   background: linear-gradient(180deg, #f7f7f9 0%, #e8e8ee 100%);
 }
 
-/* Logo always visible top-right */
 .adh-logo {
   position: absolute;
   top: 2rem;
@@ -66,7 +66,6 @@
   pointer-events: none;
 }
 
-/* Each scene is its own absolutely-positioned layer */
 .adh-scene {
   position: absolute;
   inset: 0;
@@ -81,7 +80,6 @@
   pointer-events: auto;
 }
 
-/* Per-scene radial glow */
 .adh-glow {
   position: absolute;
   top: 50%;
@@ -231,7 +229,6 @@
   transform: translateY(-1px);
 }
 
-/* Scene progress indicator (3 dots, bottom center) */
 .adh-progress {
   position: absolute;
   bottom: 2.5rem;
@@ -256,7 +253,6 @@
   width: 44px;
 }
 
-/* Mobile */
 @media (max-width: 768px) {
   .adh-product {
     max-width: 75vmin;
@@ -279,7 +275,6 @@
   }
 }
 
-/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .adh-product,
   .adh-eyebrow,
