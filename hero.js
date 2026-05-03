@@ -5,10 +5,8 @@
   var MOUNTED_FLAG = "data-adh-mounted";
 
   var BASE = "https://cdn.jsdelivr.net/gh/zakiashoqullah0-gif/salla-hero@main/assets/";
-
   var LOGO = BASE + "logo.png";
 
-  // === All 3 scenes defined here ===
   var SCENES = [
     {
       productSrc: BASE + "printer.png",
@@ -82,18 +80,12 @@
 
   function loadGSAP() {
     return new Promise(function (resolve, reject) {
-      if (window.gsap && window.ScrollTrigger) return resolve();
-      var s1 = document.createElement('script');
-      s1.src = 'https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js';
-      s1.onload = function () {
-        var s2 = document.createElement('script');
-        s2.src = 'https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js';
-        s2.onload = resolve;
-        s2.onerror = reject;
-        document.head.appendChild(s2);
-      };
-      s1.onerror = reject;
-      document.head.appendChild(s1);
+      if (window.gsap) return resolve();
+      var s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js';
+      s.onload = resolve;
+      s.onerror = reject;
+      document.head.appendChild(s);
     });
   }
 
@@ -138,8 +130,6 @@
     if (root.hasAttribute('data-adh-init')) return;
     root.setAttribute('data-adh-init', 'true');
 
-    gsap.registerPlugin(ScrollTrigger);
-
     var wrapper = root.querySelector('.adh-wrapper');
     var logo = root.querySelector('.adh-logo');
     var progress = root.querySelector('.adh-progress');
@@ -149,7 +139,6 @@
 
     console.log('[adh] init complete, scenes:', scenes.length);
 
-    // Collect per-scene refs
     var sceneRefs = scenes.map(function (sceneEl) {
       return {
         el: sceneEl,
@@ -163,8 +152,7 @@
       };
     });
 
-    // === Initial state for all scenes ===
-    sceneRefs.forEach(function (s, i) {
+    sceneRefs.forEach(function (s) {
       gsap.set(s.product, { y: 80, scale: 0.85, rotateY: -15, opacity: 0 });
       gsap.set(s.glow, { scale: 0.6, opacity: 0 });
       gsap.set(s.floorShadow, { scaleX: 0.5, opacity: 0 });
@@ -172,13 +160,10 @@
     });
     gsap.set(logo, { y: -20, opacity: 0 });
     gsap.set(progress, { opacity: 0 });
-
-    // Show scene 1 by default
     gsap.set(scenes[0], { opacity: 1 });
 
     var floatingTweens = [];
 
-    // === Per-scene entry choreography ===
     function playSceneEntry(index) {
       var s = sceneRefs[index];
       var tl = gsap.timeline();
@@ -206,8 +191,10 @@
         duration: 0.7, ease: 'power2.out'
       }, 1.15);
 
-      // Continuous float
       tl.add(function () {
+        if (floatingTweens[index]) {
+          floatingTweens[index].forEach(function (t) { t.kill(); });
+        }
         var floatT = gsap.to(s.product, {
           y: -12, duration: 3, ease: 'sine.inOut', yoyo: true, repeat: -1
         });
@@ -218,7 +205,6 @@
       }, 1.3);
     }
 
-    // Logo + progress fade-in (always visible)
     function playInitial() {
       gsap.to(logo, { y: 0, opacity: 1, duration: 0.8, ease: 'power2.out', delay: 0.2 });
       gsap.to(progress, { opacity: 1, duration: 0.8, ease: 'power2.out', delay: 0.4 });
@@ -227,74 +213,75 @@
 
     setTimeout(playInitial, 200);
 
-    // === Master scroll: 3 viewports total ===
+    // === Scroll-driven scene switching using vanilla scroll listener ===
+    // No ScrollTrigger pin — the CSS sticky handles the visual lock
     var currentScene = 0;
 
-    ScrollTrigger.create({
-      trigger: wrapper,
-      start: 'top top',
-      end: '+=300%',
-      pin: true,
-      scrub: 0.6,
-      anticipatePin: 1,
-      onUpdate: function (self) {
-        var p = self.progress; // 0 to 1
-        var localProgress = (p * SCENES.length) % 1; // progress within current scene 0..1
-        var sceneIndex = Math.min(Math.floor(p * SCENES.length), SCENES.length - 1);
+    function onScroll() {
+      var rect = root.getBoundingClientRect();
+      var rootHeight = root.offsetHeight;
+      var viewportHeight = window.innerHeight;
 
-        // Crossfade backgrounds
-        bgs.forEach(function (bg, i) {
-          var dist = Math.abs((p * (SCENES.length - 1)) - i);
-          var opacity = Math.max(0, 1 - dist);
-          gsap.set(bg, { opacity: opacity });
-        });
+      // How far into .adh-root have we scrolled?
+      // 0 when top of root is at top of viewport
+      // 1 when bottom of root - viewport height is at top of viewport
+      var scrollableDistance = rootHeight - viewportHeight;
+      if (scrollableDistance <= 0) return;
 
-        // Update active scene visibility (with crossfade)
-        scenes.forEach(function (sc, i) {
-          var dist = Math.abs((p * SCENES.length) - (i + 0.5));
-          var visibility = i === sceneIndex ? 1 : (dist < 0.7 ? 1 - dist : 0);
-          gsap.set(sc, { opacity: Math.max(0, Math.min(1, visibility)) });
-        });
+      var scrolled = Math.max(0, -rect.top);
+      var p = Math.min(scrolled / scrollableDistance, 1);
 
-        // Update active dot
-        dots.forEach(function (dot, i) {
-          dot.classList.toggle('is-active', i === sceneIndex);
-        });
+      var sceneIndex = Math.min(Math.floor(p * SCENES.length), SCENES.length - 1);
 
-        // Detect scene change → trigger entry animation for new scene
-        if (sceneIndex !== currentScene) {
-          currentScene = sceneIndex;
+      // Crossfade backgrounds
+      bgs.forEach(function (bg, i) {
+        var dist = Math.abs((p * (SCENES.length - 1)) - i);
+        var opacity = Math.max(0, 1 - dist);
+        gsap.set(bg, { opacity: opacity });
+      });
 
-          // Reset incoming scene to entry state
-          var s = sceneRefs[sceneIndex];
-          gsap.set(s.product, { y: 80, scale: 0.85, rotateY: -15, opacity: 0 });
-          gsap.set(s.glow, { scale: 0.6, opacity: 0 });
-          gsap.set(s.floorShadow, { scaleX: 0.5, opacity: 0 });
-          gsap.set([s.eyebrow, s.headline, s.sub, s.cta], { y: 30, opacity: 0, filter: 'blur(8px)' });
+      // Update active scene visibility (with crossfade)
+      scenes.forEach(function (sc, i) {
+        var dist = Math.abs((p * SCENES.length) - (i + 0.5));
+        var visibility = i === sceneIndex ? 1 : (dist < 0.7 ? 1 - dist : 0);
+        gsap.set(sc, { opacity: Math.max(0, Math.min(1, visibility)) });
+      });
 
-          // Stop float on previous scene
-          if (floatingTweens[sceneIndex]) {
-            floatingTweens[sceneIndex].forEach(function (t) { t.kill(); });
-          }
+      // Update active dot
+      dots.forEach(function (dot, i) {
+        dot.classList.toggle('is-active', i === sceneIndex);
+      });
 
-          playSceneEntry(sceneIndex);
-        }
+      // Detect scene change → trigger entry animation for new scene
+      if (sceneIndex !== currentScene) {
+        currentScene = sceneIndex;
 
-        // Within-scene scroll-driven exit on the OUTGOING scene
-        // (subtle drift as user scrolls past mid-point of scene)
-        if (sceneIndex < SCENES.length - 1) {
-          var nextSceneTransition = localProgress; // 0 = scene start, 1 = scene end
-          if (nextSceneTransition > 0.5) {
-            var exitProgress = (nextSceneTransition - 0.5) * 2; // 0..1
-            var s = sceneRefs[sceneIndex];
-            gsap.set(s.product, { y: -exitProgress * 60, scale: 1 - exitProgress * 0.1 });
-            gsap.set([s.eyebrow, s.headline, s.sub, s.cta], { y: exitProgress * 30 });
-          }
-        }
+        var s = sceneRefs[sceneIndex];
+        gsap.set(s.product, { y: 80, scale: 0.85, rotateY: -15, opacity: 0 });
+        gsap.set(s.glow, { scale: 0.6, opacity: 0 });
+        gsap.set(s.floorShadow, { scaleX: 0.5, opacity: 0 });
+        gsap.set([s.eyebrow, s.headline, s.sub, s.cta], { y: 30, opacity: 0, filter: 'blur(8px)' });
+
+        playSceneEntry(sceneIndex);
       }
-    });
+    }
 
-    console.log('[adh] all 3 acts ready');
+    // Throttle scroll using requestAnimationFrame
+    var ticking = false;
+    window.addEventListener('scroll', function () {
+      if (!ticking) {
+        window.requestAnimationFrame(function () {
+          onScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }, { passive: true });
+
+    // Initial call
+    onScroll();
+
+    console.log('[adh] all 3 acts ready (sticky mode)');
   }
 
   function scan() {
@@ -318,5 +305,5 @@
     }
   }).observe(document.body, { childList: true, subtree: true });
 
-  console.log('[adh] 3-act v1 loaded');
+  console.log('[adh] sticky-mode v4 loaded');
 })();
